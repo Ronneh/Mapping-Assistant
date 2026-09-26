@@ -80,6 +80,7 @@ public final class MappingAssistant {
         registerApp(HOME, "\u2302", "Home", "\u00a0", createHomePanel());
         registerApp("generator", "+", "Brush", "Generator", new BrushGeneratorPanel());
         registerApp("optimizer", "\u25a6", "Brush", "Optimizer", new BrushOptimizer().createContent());
+        registerApp("quick-zone-optimizer", "\u2315", "Quick Zone", "Optimizer", new QuickZoneOptimizerPanel());
         registerApp("prefabs", "\u25c7", "Prefab", "Explorer", new PrefabExplorerPanel());
         registerApp("double", "\u21c9", "Double", "Map", new MapDoublerPanel());
         registerApp("resizer", "\u2922", "Resize", "Image", new ImageResizerPanel());
@@ -236,7 +237,7 @@ public final class MappingAssistant {
         title.setFont(title.getFont().deriveFont(Font.BOLD, 17f));
         guide.add(title, BorderLayout.NORTH);
 
-        JPanel features = new JPanel(new GridLayout(5, 2, 8, 8));
+        JPanel features = new JPanel(new GridLayout(0, 2, 8, 8));
         features.setOpaque(false);
         features.add(featureInfo("Notes Explorer",
                 "Organize notes and tasks in folders for each map."));
@@ -244,6 +245,8 @@ public final class MappingAssistant {
                 "Create grid-aligned polygon brushes for common CSG tasks."));
         features.add(featureInfo("Brush Optimizer",
                 "Find and fix off-grid brush vertices safely."));
+        features.add(featureInfo("Quick Zone Optimizer",
+                "List actors in suspicious zones for manual inspection in UnrealEd."));
         features.add(featureInfo("Prefab Explorer",
                 "Organize and preview prefabs instantly."));
         features.add(featureInfo("Double map",

@@ -52,6 +52,16 @@ icon. By default, the app image is written below `target\windows-release`.
 - **Brush Optimizer** checks pasted T3D brushes for off-grid vertices,
   planarity problems, and alignment issues. Every proposed change can be
   reviewed before the corrected map data is copied.
+- **Quick Zone Optimizer** lists actor names in positive-numbered LevelInfo
+  regions in the upper **Suspicious Zones** pane. The lower **General Information**
+  pane shows zone totals, matching-brush counts, and parsing notes.
+  Each actor block includes the zone number, actor name, solidity, and CSG
+  operation when present. Detected zones count distinct exported ZoneNumbers.
+  Actor names are on their own indented line for easy copying into
+  UnrealEd search, including subtractive rooms and Movers.
+  Brush and Semi-Solid filters help locate geometry without changing any map
+  code. A suspicious zone may be legitimate; inspect it in UnrealEd and run
+  **Build All** before exporting and after manual edits.
 - **Prefab Explorer** organizes T3D/TXT prefabs in folders, edits raw code and
   shows selectable animated brush previews, with search, undo/redo and safe auto-save.
 - **Double** prepares duplicated team-based map content for the opposite
