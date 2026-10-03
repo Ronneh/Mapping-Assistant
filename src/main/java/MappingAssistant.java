@@ -11,6 +11,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.event.MouseWheelEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -26,6 +27,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JScrollBar;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -36,6 +38,10 @@ import javax.swing.JTextArea;
 /** Single-window launcher and workspace for classic mapping utilities. */
 public final class MappingAssistant {
     private static final String HOME = "home";
+    private static final int FEATURE_COLUMNS = 2;
+    private static final int FEATURE_VISIBLE_ROWS = 5;
+    private static final int FEATURE_ROW_HEIGHT = 102;
+    private static final int FEATURE_GAP = 8;
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final DateTimeFormatter DATE = DateTimeFormatter
             .ofPattern("EEEE, d MMMM uuuu", Locale.ENGLISH);
@@ -80,6 +86,7 @@ public final class MappingAssistant {
         registerApp(HOME, "\u2302", "Home", "\u00a0", createHomePanel());
         registerApp("generator", "+", "Brush", "Generator", new BrushGeneratorPanel());
         registerApp("optimizer", "\u25a6", "Brush", "Optimizer", new BrushOptimizer().createContent());
+        registerApp("quick-zone-optimizer", "\u2315", "Quick Zone", "Optimizer", new QuickZoneOptimizerPanel());
         registerApp("prefabs", "\u25c7", "Prefab", "Explorer", new PrefabExplorerPanel());
         registerApp("double", "\u21c9", "Double", "Map", new MapDoublerPanel());
         registerApp("resizer", "\u2922", "Resize", "Image", new ImageResizerPanel());
@@ -148,7 +155,7 @@ public final class MappingAssistant {
     private JPanel createHomePanel() {
         JPanel home = new JPanel(new BorderLayout(18, 18));
         home.setBackground(AssistantTheme.BACKGROUND);
-        home.setBorder(BorderFactory.createEmptyBorder(24, 30, 24, 30));
+        home.setBorder(BorderFactory.createEmptyBorder(12, 30, 24, 30));
 
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
@@ -164,7 +171,7 @@ public final class MappingAssistant {
         top.add(welcome, BorderLayout.NORTH);
         JPanel dashboard = new JPanel(new BorderLayout(12, 0));
         dashboard.setOpaque(false);
-        dashboard.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
+        dashboard.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         dashboard.add(createFeatureGuide(), BorderLayout.CENTER);
         JPanel weatherPosition = new JPanel(new BorderLayout(0, 12));
         weatherPosition.setOpaque(false);
@@ -231,12 +238,15 @@ public final class MappingAssistant {
     }
 
     private JPanel createFeatureGuide() {
-        JPanel guide = AssistantTheme.card(new BorderLayout(0, 10));
+        JPanel guide = AssistantTheme.card(new BorderLayout(0, 4));
+        guide.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(AssistantTheme.BORDER),
+                BorderFactory.createEmptyBorder(10, 16, 12, 16)));
         JLabel title = new JLabel("Available Tools");
         title.setFont(title.getFont().deriveFont(Font.BOLD, 17f));
         guide.add(title, BorderLayout.NORTH);
 
-        JPanel features = new JPanel(new GridLayout(5, 2, 8, 8));
+        JPanel features = new JPanel(new GridLayout(0, 2, 8, 8));
         features.setOpaque(false);
         features.add(featureInfo("Notes Explorer",
                 "Organize notes and tasks in folders for each map."));
@@ -244,6 +254,8 @@ public final class MappingAssistant {
                 "Create grid-aligned polygon brushes for common CSG tasks."));
         features.add(featureInfo("Brush Optimizer",
                 "Find and fix off-grid brush vertices safely."));
+        features.add(featureInfo("Quick Zone Optimizer",
+                "List actors in suspicious zones for manual inspection in UnrealEd."));
         features.add(featureInfo("Prefab Explorer",
                 "Organize and preview prefabs instantly."));
         features.add(featureInfo("Double map",
@@ -259,16 +271,50 @@ public final class MappingAssistant {
         features.add(featureInfo("Editor Guide",
                 "Browse and search the complete Unreal Editor reference guide."));
 
-        features.setPreferredSize(new Dimension(430, 500));
+        int featureRows = (features.getComponentCount() + FEATURE_COLUMNS - 1) / FEATURE_COLUMNS;
+        int contentHeight = featureRows * FEATURE_ROW_HEIGHT + Math.max(0, featureRows - 1) * FEATURE_GAP;
+        int visibleHeight = FEATURE_VISIBLE_ROWS * FEATURE_ROW_HEIGHT
+                + (FEATURE_VISIBLE_ROWS - 1) * FEATURE_GAP;
+        features.setPreferredSize(new Dimension(430, contentHeight));
         featureScroll = new JScrollPane(features,
                 JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        featureScroll.setPreferredSize(new Dimension(430, visibleHeight));
         featureScroll.setBorder(BorderFactory.createEmptyBorder());
         featureScroll.setOpaque(false);
         featureScroll.getViewport().setOpaque(false);
         featureScroll.setWheelScrollingEnabled(true);
-        featureScroll.getVerticalScrollBar().setUnitIncrement(96);
-        guide.add(featureScroll, BorderLayout.CENTER);
+        featureScroll.getVerticalScrollBar().setUnitIncrement(16);
+        installFeatureWheelScrolling(features);
+        featureScroll.addMouseWheelListener(this::scrollFeatureWidgets);
+        JPanel featureViewport = new JPanel(new BorderLayout());
+        featureViewport.setOpaque(false);
+        featureViewport.add(featureScroll, BorderLayout.NORTH);
+        guide.add(featureViewport, BorderLayout.CENTER);
         return guide;
+    }
+
+    private void installFeatureWheelScrolling(Component component) {
+        component.addMouseWheelListener(this::scrollFeatureWidgets);
+        if (component instanceof Container container) {
+            for (Component child : container.getComponents()) installFeatureWheelScrolling(child);
+        }
+    }
+
+    private void scrollFeatureWidgets(MouseWheelEvent event) {
+        if (featureScroll == null) return;
+        double preciseRotation = event.getPreciseWheelRotation();
+        int direction = preciseRotation > 0 ? 1 : preciseRotation < 0 ? -1 : event.getWheelRotation();
+        if (direction == 0) return;
+        JScrollBar scrollbar = featureScroll.getVerticalScrollBar();
+        int minimum = scrollbar.getMinimum();
+        int maximum = Math.max(minimum, scrollbar.getMaximum() - scrollbar.getVisibleAmount());
+        int delta = preciseRotation != 0
+                ? (int) Math.round(preciseRotation * 24)
+                : event.getUnitsToScroll() * 16;
+        if (delta == 0) delta = direction * 4;
+        int value = scrollbar.getValue() + delta;
+        scrollbar.setValue(Math.max(minimum, Math.min(maximum, value)));
+        event.consume();
     }
 
     private JPanel featureInfo(String title, String description) {

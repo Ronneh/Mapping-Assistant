@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$AppVersion = '5.0.0',
+    [string]$AppVersion = '5.3.0',
     [string]$ReleaseName = "Mapping Assistant v$($AppVersion.Split('.')[0])",
     [string]$OutputDirectory = 'target\windows-release',
     [string]$ContentPackDirectory = 'help-content-pack',
