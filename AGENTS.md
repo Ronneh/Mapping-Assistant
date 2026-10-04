@@ -21,55 +21,61 @@ Windows release packaging must preserve the canonical application icon. Keep the
 - Before delivering the release, extract the icon from the packaged `.exe` and visually or programmatically verify that it is the intended application icon rather than the default Java launcher icon.
 - If the packaged `.exe` contains the correct icon but Explorer still shows an older one, refresh the Windows icon cache. Cache refresh is a display workaround only and must not replace the packaging verification above.
 
-## Arbeitsweise für KI-Agenten
+## AI Agent Working Conventions
 
-Diese Datei ist die verbindliche Projektanweisung für Codex und andere KI-Agenten,
-die im Repository arbeiten. Die Anweisungen gelten zusätzlich zu den Anweisungen
-des Benutzers und zu den jeweils geltenden Sicherheitsregeln des Agenten.
+This file is the binding project guidance for Codex and other AI agents working
+in this repository. These instructions apply in addition to the user's
+instructions and the agent's applicable safety rules.
 
-### Nach jeder Änderung
+### Language
 
-- Änderungen zuerst im Repository prüfen (`git diff` und `git status --short`).
-- Nach Änderungen an Java-Code, Ressourcen, `pom.xml`, Build-Skripten oder
-  anderen anwendungsrelevanten Dateien die Tests ausführen und die
-  Desktopversion neu bauen. Die Desktopversion gilt erst nach einem
-  erfolgreichen Build als aktualisiert.
-- Dafür aus dem Projektverzeichnis den vorhandenen Windows-Packaging-Aufruf
-  verwenden:
+- All work performed in the repository must be in English.
+- Write documentation, release notes, commit messages, and other repository
+  text in English.
+- Any code comments that are necessary must be written in English. Avoid adding
+  comments unless they explain non-obvious behavior or an important constraint.
+- Keep the conversation with the user in German unless the user explicitly asks
+  for another chat language. This chat-language exception does not change the
+  English-only rule for repository contents.
+
+### After every change
+
+- Inspect the repository first (`git diff` and `git status --short`).
+- After changes to Java code, resources, `pom.xml`, build scripts, or any other
+  application-relevant files, run the tests and rebuild the desktop version.
+  The desktop version is considered updated only after a successful build.
+- Use the existing Windows packaging command from the project directory:
 
   ```powershell
   powershell -ExecutionPolicy Bypass -File scripts\package-windows.ps1 `
     -OutputDirectory target\windows-dev-release
   ```
 
-- Das Ausgabeverzeichnis darf vorher nicht existieren, weil das Packaging-Skript
-  absichtlich keine vorhandene Ausgabe überschreibt. Bei einem erneuten Build
-  einen neuen Ausgabepfad verwenden oder die alte Ausgabe nach vorheriger
-  Prüfung sicher entfernen.
-- Das Packaging-Skript baut absichtlich den normalen Release-Zweig. Die
-  Desktopversion darf daher keine Tutorial-Editor-Klassen oder deren
-  Service-Datei enthalten. Für Editor-Entwicklung zusätzlich den
-  `tutorial-editor`-Build verwenden, aber diese Variante nicht als Release- oder
-  Desktopversion ausgeben.
-- Nach dem Packaging den vom Skript gemeldeten Windows-App-Image-Pfad prüfen
-  und die erzeugte `.exe` verwenden. Keine alte `.exe` aus einer früheren
-  Version kopieren oder umbenennen.
+- The output directory must not exist beforehand because the packaging script
+  intentionally refuses to overwrite an existing output. For another build,
+  use a new output path or remove the old output only after checking its exact
+  location and scope.
+- The packaging script intentionally builds the normal release branch. The
+  desktop version must therefore not contain tutorial-editor classes or their
+  service file. For editor development, also use the `tutorial-editor` build,
+  but never publish that variant as the release or desktop version.
+- After packaging, inspect the Windows app image path reported by the script and
+  use the newly generated `.exe`. Never copy or rename an `.exe` from an older
+  version.
 
-### Tests und Übergabe
+### Tests and handoff
 
-- Für normale Codeänderungen mindestens `.\mvnw.cmd test` ausführen; wenn
-  möglich zusätzlich `.\mvnw.cmd package` beziehungsweise das
-  Windows-Packaging-Skript ausführen.
-- Schlägt ein Test, Build oder Packaging fehl, die Ursache beheben oder im
-  Abschluss klar melden. Die Desktopversion nicht als aktualisiert bezeichnen,
-  wenn der dafür nötige Build fehlgeschlagen ist.
-- Vor der Übergabe den Diff auf unbeabsichtigte Änderungen, versehentlich
-  erzeugte Artefakte und Geheimnisse prüfen. `help-content-pack` bleibt ignoriert;
-  Tutorial-Änderungen gehören als HTML-Overrides nach
-  `src/main/resources/tutorial-overrides/`.
+- For normal code changes, run at least `.\mvnw.cmd test`; when possible, also
+  run `.\mvnw.cmd package` or the Windows packaging script.
+- If a test, build, or packaging step fails, fix the cause or report it clearly
+  in the final response. Do not claim that the desktop version was updated when
+  its required build failed.
+- Before handoff, inspect the diff for unintended changes, generated artifacts,
+  and secrets. Keep `help-content-pack` ignored; tutorial changes belong as
+  HTML overrides below `src/main/resources/tutorial-overrides/`.
 
-### Änderungen an dieser Datei
+### Changes to this file
 
-- Diese Datei darf erweitert werden, wenn neue dauerhafte Projektregeln
-  entstehen. Bestehende Regeln zu Profilen, Release-Artefakten und Windows-Icons
-  dürfen dabei nicht abgeschwächt werden.
+- This file may be extended when new permanent project rules are introduced.
+  Do not weaken the existing rules about profiles, release artifacts, or the
+  Windows application icon.
