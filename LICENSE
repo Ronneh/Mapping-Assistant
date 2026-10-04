@@ -1,31 +1,27 @@
-MIT License
+Mapping Assistant Proprietary License
 
-Copyright (c) 2026 VRN|Ron
+Copyright (c) 2026 VRN|Ron. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Mapping Assistant, including its source code, documentation, artwork, build
+scripts, and original project materials, is proprietary and confidential
+software. Access to this repository or to a compiled release does not transfer
+ownership or grant a license to copy, modify, publish, distribute, sublicense,
+sell, or create derivative works from the software.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Use is limited to recipients explicitly authorized by the copyright owner. No
+public forks, public source distributions, external patches, or third-party
+contributions are authorized. Pull requests and other unsolicited code changes
+are not accepted.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+To the extent that applicable law requires an exception to these restrictions,
+that exception applies only to the minimum extent required by law. All rights
+not expressly granted in writing by the copyright owner are reserved.
 
-Third-party materials
----------------------
+Third-party components
+----------------------
 
-This MIT License applies to the original Mapping Assistant source code.
-Bundled third-party libraries, historical tutorials, community documentation,
-game names, logos, trademarks, and other third-party materials are not
-relicensed by this notice and remain subject to their respective licenses and
-owners' rights. Mapping Assistant is an independent community project
-and is not affiliated with or endorsed by Epic Games.
+This notice applies only to original Mapping Assistant materials. Bundled
+libraries, historical tutorials, community documentation, game names, logos,
+trademarks, and other third-party materials remain subject to their respective
+licenses and owners' rights. Nothing in this notice relicenses those materials
+or grants rights beyond their applicable terms.
