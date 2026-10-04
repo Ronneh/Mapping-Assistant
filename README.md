@@ -6,23 +6,27 @@ image, scripting, documentation, and planning tools together in one
 application.
 
 The source code, build system, documentation, artwork, and original project
-materials are private and restricted to authorized recipients. Mapping
-Assistant is not an open-source project, and external contributions are not
-accepted.
+materials may be publicly visible and downloadable. Public availability does
+not make the original project materials open source or grant permission to
+modify, relicense, or redistribute them.
 
-## Authorized distribution
+## Download
 
-Windows builds are distributed privately by the project owner. Do not publish,
-mirror, fork, redistribute, or provide source access to an unauthorized party.
+[Download the latest Windows release](https://github.com/Ronneh/Mapping-Assistant/releases/latest)
+
+Open the release page, download **Mapping Assistant v5.zip** from its
+**Assets** section, extract the complete archive, and run
+**Mapping Assistant vX.exe**.
 
 Keep the `app`, `runtime`, and `help-content` folders next to the executable;
 the application is not designed to run from the EXE alone. The Windows build
 is currently unsigned, so Microsoft Defender SmartScreen may show a warning.
-Only run builds received through an authorized distribution channel.
+Only use releases published by the project owner. Do not interpret the public
+download as an open-source license.
 
 ### Building the Windows app image
 
-Authorized maintainers can run the following from PowerShell:
+From PowerShell, run the following:
 `powershell -ExecutionPolicy Bypass -File scripts\package-windows.ps1`. The
 process-scoped bypass does not alter the system execution policy. The script
 performs the normal Maven build, verifies that tutorial-editor classes are
@@ -30,11 +34,10 @@ absent, generates a multi-resolution Windows icon from `app-icon.png`, passes
 it explicitly to `jpackage`, and checks the packaged launcher for the canonical
 icon. By default, the app image is written below `target\windows-release`.
 
-## Authorized development setup
+## Development setup
 
 - Install **Git** and a **JDK 17**.
-- Access the repository only through credentials and channels approved by the
-  project owner. Do not create public forks or mirrors.
+- Clone or download the public repository from GitHub.
 - Open the project root (the folder containing `pom.xml`) in an IDE with Maven
   support, such as IntelliJ IDEA, Eclipse, or Visual Studio Code with the Java
   extensions.
@@ -43,10 +46,6 @@ icon. By default, the app image is written below `target\windows-release`.
 - Run `.\mvnw.cmd package` to create the application JAR in the `target` folder.
 - Start the application from the source tree with
   `.\mvnw.cmd exec:java "-Dexec.mainClass=MappingAssistant"`.
-
-Changes are made only by authorized project maintainers. Pull requests,
-external patches, unsolicited code changes, and public contribution workflows
-are not accepted.
 
 ## Features
 

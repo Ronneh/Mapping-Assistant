@@ -21,19 +21,16 @@ Windows release packaging must preserve the canonical application icon. Keep the
 - Before delivering the release, extract the icon from the packaged `.exe` and visually or programmatically verify that it is the intended application icon rather than the default Java launcher icon.
 - If the packaged `.exe` contains the correct icon but Explorer still shows an older one, refresh the Windows icon cache. Cache refresh is a display workaround only and must not replace the packaging verification above.
 
-## Proprietary repository and contribution policy
+## Proprietary licensing
 
-- Mapping Assistant is proprietary software. Do not add an open-source license,
-  public-source distribution instructions, or permissions to copy, modify,
-  redistribute, sublicense, or create derivative works.
-- Do not add public contribution workflows, contribution guides, issue templates,
-  pull-request instructions, or community-maintainer language.
-- The repository is maintained by authorized project owners only. Do not enable
-  pull-request CI triggers or describe external patches as an accepted workflow.
+- Mapping Assistant may be publicly visible and downloadable, but its original
+  source code, documentation, artwork, build scripts, and project materials
+  remain proprietary.
+- Do not add an open-source license or permissions to copy, modify, relicense,
+  or create derivative works from original Mapping Assistant materials.
 - Third-party libraries, tutorials, trademarks, and other bundled materials keep
   their own rights and licenses. Do not imply that the proprietary project
   relicenses those materials.
-- Release builds and source access are restricted to authorized recipients.
 
 ## AI Agent Working Conventions
 
