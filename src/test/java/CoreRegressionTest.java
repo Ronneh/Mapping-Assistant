@@ -47,6 +47,231 @@ class CoreRegressionTest {
     }
 
     @Test
+    void brushOptimizerOffersOneUnitGrid() throws Exception {
+        BrushOptimizer optimizer = new BrushOptimizer();
+        optimizer.createContent();
+        Field field = BrushOptimizer.class.getDeclaredField("gridStepBox");
+        field.setAccessible(true);
+
+        JComboBox<?> gridStepBox = (JComboBox<?>) field.get(optimizer);
+        boolean containsOneUnitStep = false;
+        for (int index = 0; index < gridStepBox.getItemCount(); index++) {
+            if (Integer.valueOf(1).equals(gridStepBox.getItemAt(index))) {
+                containsOneUnitStep = true;
+                break;
+            }
+        }
+        assertTrue(containsOneUnitStep);
+    }
+
+    @Test
+    void brushOptimizerSnapsCoordinatesToOneUnitGrid() throws Exception {
+        Method snapVertexLine = BrushOptimizer.class.getDeclaredMethod(
+                "snapVertexLine", String.class, int.class, int.class, int.class);
+        snapVertexLine.setAccessible(true);
+
+        String optimized = (String) snapVertexLine.invoke(null,
+                "    Vertex   +00001.500000,+00002.490000,+00003.510000", 1, 0, 256);
+
+        assertEquals("    Vertex   +00002.000000,+00002.000000,+00004.000000", optimized);
+    }
+
+    @Test
+    void brushOptimizerDoesNotForceSmallGridStepOneMoves() throws Exception {
+        Method snapVertexLine = BrushOptimizer.class.getDeclaredMethod(
+                "snapVertexLine", String.class, int.class, int.class, int.class);
+        snapVertexLine.setAccessible(true);
+
+        String input = "Vertex +00051.700001,+00000.000000,+00000.000000";
+        String optimized = (String) snapVertexLine.invoke(null, input, 1, 1, 256);
+
+        assertEquals(input, optimized);
+    }
+
+    @Test
+    void brushOptimizerSeparatesNoiseCleanupFromMinimumMove() throws Exception {
+        Class<?> snapMode = Class.forName("BrushOptimizer$SnapMode");
+        Method snapVertexLine = BrushOptimizer.class.getDeclaredMethod(
+                "snapVertexLine", String.class, int.class, int.class, int.class,
+                snapMode, boolean.class, double.class);
+        snapVertexLine.setAccessible(true);
+        Object nearest = Enum.valueOf(snapMode.asSubclass(Enum.class), "NEAREST");
+        String input = "Vertex +00001.000007,+00001.400000,+00000.000000";
+
+        String withNoiseCleanup = (String) snapVertexLine.invoke(null,
+                input, 1, 1, 256, nearest, true, 0.01);
+        String withoutNoiseCleanup = (String) snapVertexLine.invoke(null,
+                input, 1, 1, 256, nearest, false, 0.01);
+
+        assertEquals("Vertex +00001.000000,+00001.400000,+00000.000000", withNoiseCleanup);
+        assertEquals(input, withoutNoiseCleanup);
+    }
+
+    @Test
+    void brushOptimizerReportsCoordinatesKeptBelowMinimumMove() throws Exception {
+        Class<?> snapMode = Class.forName("BrushOptimizer$SnapMode");
+        Method find = BrushOptimizer.class.getDeclaredMethod(
+                "findOffGridBrushes", String.class, int.class, int.class, int.class,
+                snapMode, boolean.class, double.class);
+        find.setAccessible(true);
+        Object nearest = Enum.valueOf(snapMode.asSubclass(Enum.class), "NEAREST");
+        String map = String.join("\n",
+                "Begin Actor Class=Brush Name=Diagnostics",
+                "    Vertex +00001.400000,+00001.000007,+00000.000000",
+                "End Actor");
+
+        List<?> issues = (List<?>) find.invoke(null, map, 1, 1, 256, nearest, true, 0.01);
+
+        assertEquals(1, issues.size());
+        String description = issues.get(0).toString();
+        assertTrue(description.contains("kept below Min. move: 1"), description);
+        assertTrue(description.contains("noise cleaned: 1"), description);
+    }
+
+    @Test
+    void brushOptimizerHandlesNegativeHalfAndScientificCoordinates() throws Exception {
+        Method snapVertexLine = BrushOptimizer.class.getDeclaredMethod(
+                "snapVertexLine", String.class, int.class, int.class, int.class);
+        snapVertexLine.setAccessible(true);
+
+        String optimized = (String) snapVertexLine.invoke(null,
+                "Vertex -1.5e0,+2.5E0,-2.75", 1, 0, 256);
+
+        assertEquals("Vertex -00002.000000,+00002.000000,-00003.000000", optimized);
+    }
+
+    @Test
+    void brushOptimizerPreservesCrLfAndFindsMultipleBrushes() throws Exception {
+        String map = String.join("\r\n",
+                "Begin Actor Class=Brush Name=First",
+                "    Vertex +00001.500000,+00000.000000,+00000.000000",
+                "End Actor",
+                "Begin Actor Name=Second Class = Brush",
+                "    Vertex +00003.500000,+00000.000000,+00000.000000",
+                "End Actor");
+
+        List<?> issues = invokeFindOffGridBrushes(map);
+        assertEquals(2, issues.size());
+        String optimized = invokeOptimizeMap(map, issues, new boolean[] { true, true }, 1, 0, 256, "NEAREST", false);
+
+        assertTrue(optimized.contains("\r\n"));
+        assertTrue(optimized.contains("+00002.000000,+00000.000000,+00000.000000"));
+        assertTrue(optimized.contains("+00004.000000,+00000.000000,+00000.000000"));
+    }
+
+    @Test
+    void brushOptimizerReportsIncompleteBrushWithoutOptimizingFollowingText() throws Exception {
+        String map = "Begin Actor Class=Brush Name=Incomplete\n"
+                + "    Vertex +00001.500000,+00000.000000,+00000.000000\n";
+
+        List<?> issues = invokeFindOffGridBrushes(map);
+
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).toString().contains("incomplete brush"));
+        assertEquals(map, invokeOptimizeMap(map, issues, new boolean[] { true }, 1, 0, 256, "NEAREST", false));
+    }
+
+    @Test
+    void brushOptimizerCanOptimizeOnlySelectedBrushes() throws Exception {
+        String map = String.join("\n",
+                "Begin Actor Class=Brush Name=Selected",
+                "    Vertex +00001.500000,+00000.000000,+00000.000000",
+                "End Actor",
+                "Begin Actor Class=Brush Name=Skipped",
+                "    Vertex +00003.500000,+00000.000000,+00000.000000",
+                "End Actor");
+        List<?> issues = invokeFindOffGridBrushes(map);
+
+        String optimized = invokeOptimizeMap(map, issues, new boolean[] { true, false }, 1, 0, 256, "NEAREST", false);
+
+        assertTrue(optimized.contains("+00002.000000,+00000.000000,+00000.000000"));
+        assertTrue(optimized.contains("+00003.500000,+00000.000000,+00000.000000"));
+    }
+
+    @Test
+    void brushOptimizerSupportsSnapModes() throws Exception {
+        String floor = invokeSnapVertexLine("Vertex +00001.750000,+00000.000000,+00000.000000", "FLOOR");
+        String ceiling = invokeSnapVertexLine("Vertex +00001.250000,+00000.000000,+00000.000000", "CEILING");
+
+        assertTrue(floor.contains("+00001.000000"));
+        assertTrue(ceiling.contains("+00002.000000"));
+    }
+
+    @Test
+    void brushOptimizerUndoAndRedoRestoreOutput() throws Exception {
+        BrushOptimizer optimizer = new BrushOptimizer();
+        optimizer.createContent();
+        Field outputField = BrushOptimizer.class.getDeclaredField("outputArea");
+        outputField.setAccessible(true);
+        JTextArea output = (JTextArea) outputField.get(optimizer);
+        Method setOutput = BrushOptimizer.class.getDeclaredMethod("setOptimizedOutput", String.class);
+        Method undo = BrushOptimizer.class.getDeclaredMethod("undoOutput", java.awt.event.ActionEvent.class);
+        Method redo = BrushOptimizer.class.getDeclaredMethod("redoOutput", java.awt.event.ActionEvent.class);
+        setOutput.setAccessible(true);
+        undo.setAccessible(true);
+        redo.setAccessible(true);
+
+        setOutput.invoke(optimizer, "first");
+        setOutput.invoke(optimizer, "second");
+        undo.invoke(optimizer, new java.awt.event.ActionEvent(optimizer, 0, "undo"));
+        assertEquals("first", output.getText());
+        redo.invoke(optimizer, new java.awt.event.ActionEvent(optimizer, 0, "redo"));
+        assertEquals("second", output.getText());
+    }
+
+    @Test
+    void brushOptimizerValidatesGeometryAndCurvedBrushChains() throws Exception {
+        String invalidPolygon = String.join("\n",
+                "Begin Actor Class=Brush Name=Geometry",
+                "    Begin Polygon",
+                "        Vertex 0,0,0",
+                "        Vertex 0,0,0",
+                "        Vertex 1,1,0",
+                "        Vertex 0,1,1",
+                "    End Polygon",
+                "End Actor");
+        Method geometryWarnings = BrushOptimizer.class.getDeclaredMethod("geometryWarnings", String.class);
+        geometryWarnings.setAccessible(true);
+        List<?> warnings = (List<?>) geometryWarnings.invoke(null, invalidPolygon);
+        assertTrue(warnings.size() >= 2);
+
+        String curvedBrush = String.join("\n",
+                "Begin Actor Class=Brush Name=Curve",
+                "    Begin Polygon",
+                "        Vertex 0.5,0.5,0",
+                "        Vertex 3.5,2.5,0",
+                "        Vertex 8.5,0.5,0",
+                "        Vertex 11.5,-2.5,0",
+                "    End Polygon",
+                "End Actor");
+        List<?> issues = invokeFindOffGridBrushes(curvedBrush);
+        String optimized = invokeOptimizeMap(curvedBrush, issues, new boolean[] { true }, 2, 0, 256, "NEAREST", true);
+        assertTrue(optimized.contains("Vertex +00000.000000,+00000.000000,0"), optimized);
+        assertTrue(optimized.contains("Vertex +00004.000000,+00002.000000,0"), optimized);
+    }
+
+    @Test
+    void brushOptimizerProtectsCircularGeometryWhenRequested() throws Exception {
+        String circularBrush = String.join("\n",
+                "Begin Actor Class=Brush Name=Circular",
+                "    Vertex 10.500000,0.000000,0.000000",
+                "    Vertex 7.424000,7.424000,0.000000",
+                "    Vertex 0.000000,10.500000,0.000000",
+                "    Vertex -7.424000,7.424000,0.000000",
+                "    Vertex -10.500000,0.000000,0.000000",
+                "    Vertex -7.424000,-7.424000,0.000000",
+                "    Vertex 0.000000,-10.500000,0.000000",
+                "    Vertex 7.424000,-7.424000,0.000000",
+                "End Actor");
+        List<?> issues = invokeFindOffGridBrushes(circularBrush);
+        String optimized = invokeOptimizeMap(circularBrush, issues, new boolean[] { true },
+                1, 0, 256, "NEAREST", true);
+
+        assertTrue(optimized.contains("Vertex 10.500000,0.000000,0.000000"), optimized);
+        assertTrue(optimized.contains("Vertex 7.424000,7.424000,0.000000"), optimized);
+    }
+
+    @Test
     void manualFileTreeOrderIsPersisted() throws Exception {
         Path folder = Files.createTempDirectory("tree-order");
         Path alpha = Files.writeString(folder.resolve("Alpha.t3d"), "A");
@@ -329,6 +554,37 @@ class CoreRegressionTest {
                 FileSaveSupport.ensureImageExtension(new File(folder, "texture.bmp")));
         assertEquals("png", FileSaveSupport.imageFormat(new File(folder, "texture.png")));
         assertEquals("bmp", FileSaveSupport.imageFormat(new File(folder, "texture.BMP")));
+    }
+
+    private static List<?> invokeFindOffGridBrushes(String map) throws Exception {
+        Method find = BrushOptimizer.class.getDeclaredMethod(
+                "findOffGridBrushes", String.class, int.class, int.class);
+        find.setAccessible(true);
+        return (List<?>) find.invoke(null, map, 1, 0);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String invokeOptimizeMap(String map, List<?> issues, boolean[] selected,
+                                            int gridStep, int minMove, int maxMove,
+                                            String modeName, boolean preserveCurves) throws Exception {
+        Class<?> snapMode = Class.forName("BrushOptimizer$SnapMode");
+        Method optimize = BrushOptimizer.class.getDeclaredMethod(
+                "optimizeMap", String.class, List.class, boolean[].class,
+                int.class, int.class, int.class, snapMode, boolean.class);
+        optimize.setAccessible(true);
+        Object mode = Enum.valueOf(snapMode.asSubclass(Enum.class), modeName);
+        return (String) optimize.invoke(null, map, issues, selected,
+                gridStep, minMove, maxMove, mode, preserveCurves);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String invokeSnapVertexLine(String line, String modeName) throws Exception {
+        Class<?> snapMode = Class.forName("BrushOptimizer$SnapMode");
+        Method snap = BrushOptimizer.class.getDeclaredMethod(
+                "snapVertexLine", String.class, int.class, int.class, int.class, snapMode);
+        snap.setAccessible(true);
+        Object mode = Enum.valueOf(snapMode.asSubclass(Enum.class), modeName);
+        return (String) snap.invoke(null, line, 1, 0, 256, mode);
     }
 
     private static Object shortcut(JTextArea area, String keyStroke) {
