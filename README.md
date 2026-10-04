@@ -1,9 +1,14 @@
 # Mapping Assistant
 
-Mapping Assistant is a Windows desktop toolkit for creating and
+Mapping Assistant is proprietary Windows desktop software for creating and
 maintaining Unreal Tournament 1999 maps. It brings frequently used mapping,
-image, scripting, documentation, and planning tools together in
-one easy-to-navigate application.
+image, scripting, documentation, and planning tools together in one
+application.
+
+The source code, build system, documentation, artwork, and original project
+materials may be publicly visible and downloadable. Public availability does
+not make the original project materials open source or grant permission to
+modify, relicense, or redistribute them.
 
 ## Download
 
@@ -11,17 +16,17 @@ one easy-to-navigate application.
 
 Open the release page, download **Mapping Assistant v5.zip** from its
 **Assets** section, extract the complete archive, and run
-**Mapping Assistant vX.exe**. Keep the `app`, `runtime`, and
-`help-content` folders next to the executable; the application is not designed
-to run from the EXE alone.
+**Mapping Assistant vX.exe**.
 
-The Windows build is currently unsigned, so Microsoft Defender SmartScreen may
-show a warning after download. Verify that the archive comes from this GitHub
-repository before running it.
+Keep the `app`, `runtime`, and `help-content` folders next to the executable;
+the application is not designed to run from the EXE alone. The Windows build
+is currently unsigned, so Microsoft Defender SmartScreen may show a warning.
+Only use releases published by the project owner. Do not interpret the public
+download as an open-source license.
 
 ### Building the Windows app image
 
-From PowerShell, run
+From PowerShell, run the following:
 `powershell -ExecutionPolicy Bypass -File scripts\package-windows.ps1`. The
 process-scoped bypass does not alter the system execution policy. The script
 performs the normal Maven build, verifies that tutorial-editor classes are
@@ -32,13 +37,12 @@ icon. By default, the app image is written below `target\windows-release`.
 ## Development setup
 
 - Install **Git** and a **JDK 17**.
-- Clone the repository, e.g., with `git clone https://github.com/Ronneh/Mapping-Assistant.git`.
-- Open the cloned **Mapping-Assistant** root folder (the folder containing
-  `pom.xml`) in an IDE with Maven support, such as IntelliJ IDEA, Eclipse, or
-  Visual Studio Code with the Java extensions.
-- In PowerShell or Command Prompt, change to the project folder location, e.g., 
-  with `cd source\repos\Mapping-Assistant` and run `.\mvnw.cmd test` to
-  compile the project and execute its tests.
+- Clone or download the public repository from GitHub.
+- Open the project root (the folder containing `pom.xml`) in an IDE with Maven
+  support, such as IntelliJ IDEA, Eclipse, or Visual Studio Code with the Java
+  extensions.
+- In PowerShell or Command Prompt, change to the project folder and run
+  `.\mvnw.cmd test` to compile the project and execute its tests.
 - Run `.\mvnw.cmd package` to create the application JAR in the `target` folder.
 - Start the application from the source tree with
   `.\mvnw.cmd exec:java "-Dexec.mainClass=MappingAssistant"`.
@@ -100,10 +104,11 @@ icon. By default, the app image is written below `target\windows-release`.
   `%LOCALAPPDATA%\MappingAssistant` on Windows. Existing data from
   `%LOCALAPPDATA%\UnrealEditor2Assistant` is migrated automatically.
 
-## Third-party services and acknowledgements
+## Third-party components and acknowledgements
 
-Mapping Assistant is made possible by several external services,
-open-source projects, and community resources:
+Mapping Assistant uses several external services, libraries, and historical
+community resources. Their rights and licenses remain separate from the
+proprietary Mapping Assistant materials:
 
 - **Open-Meteo** provides the geocoding and forecast data used by the Weather
   feature. Thank you for making accessible weather APIs available without
@@ -122,15 +127,19 @@ open-source projects, and community resources:
 
 These services, libraries, games, trademarks, tutorials, and their associated
 content remain the property of their respective owners. Mapping Assistant is
-an independent community tool and is not affiliated with or
-endorsed by Epic Games or the third-party projects listed above.
+not affiliated with or endorsed by Epic Games or the third-party projects
+listed above. Nothing in this document grants permission to redistribute the
+proprietary Mapping Assistant source code.
 
 ## Author
 
 Developed by VRN|Ron.
 
-## License
+## Proprietary rights
 
-The application source code is available under the [MIT License](LICENSE).
-Bundled third-party libraries, historical tutorials, game names, trademarks,
-and other community materials remain subject to their respective owners' terms.
+Mapping Assistant is proprietary software. All rights to the original source
+code, documentation, artwork, build scripts, and project materials are
+reserved by the copyright owner. See [LICENSE](LICENSE) for the applicable
+proprietary terms. Bundled third-party libraries, historical tutorials, game
+names, trademarks, and other external materials remain subject to their own
+licenses and owners' rights.
