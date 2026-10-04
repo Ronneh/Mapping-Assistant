@@ -76,12 +76,12 @@ public final class WeatherPanel extends JPanel {
         JPanel location = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         location.setOpaque(false);
         title.setText(selectedLocation == null
-                ? t("Set up weather", "Wetter einrichten")
+                ? "Set up weather"
                 : weatherTitle(selectedLocation.display));
         JButton edit = new JButton(new PencilIcon());
         edit.setMargin(new java.awt.Insets(2, 5, 2, 5));
         edit.setPreferredSize(new Dimension(30, 24));
-        edit.setToolTipText(t("Change city", "Stadt ändern"));
+        edit.setToolTipText("Change city");
         edit.addActionListener(event -> showLocationChooser());
         unitButton.setText(fahrenheit ? "°F" : "°C");
         unitButton.addActionListener(event -> {
@@ -122,8 +122,7 @@ public final class WeatherPanel extends JPanel {
         if (selectedLocation != null) refresh();
         else {
             current.setText(" ");
-            status.setText(t("Click the pencil to choose your city.",
-                    "Zum Auswählen der Stadt auf den Stift klicken."));
+            status.setText("Click the pencil to choose your city.");
         }
     }
 
@@ -131,8 +130,7 @@ public final class WeatherPanel extends JPanel {
         JTextField input = new JTextField(selectedLocation == null ? "" : selectedLocation.name, 28);
         DefaultComboBoxModel<Location> model = new DefaultComboBoxModel<>();
         JComboBox<Location> choices = new JComboBox<>(model);
-        JLabel searchStatus = new JLabel(t("Enter at least two characters.",
-                "Mindestens zwei Zeichen eingeben."));
+        JLabel searchStatus = new JLabel("Enter at least two characters.");
         JPanel fields = new JPanel(new BorderLayout(0, 7));
         fields.setPreferredSize(new Dimension(420, 82));
         fields.add(input, BorderLayout.NORTH);
@@ -149,14 +147,14 @@ public final class WeatherPanel extends JPanel {
         });
         if (!input.getText().isBlank()) searchTimer.start();
         int result = DarkDialogs.confirm(this, fields,
-                t("Choose a location", "Ort auswählen"),
+                "Choose a location",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         searchTimer.stop();
         locationSearchGeneration++;
         if (result == JOptionPane.OK_OPTION && choices.getSelectedItem() instanceof Location location) {
             applyLocation(location);
         } else {
-            status.setText(t("Location was not changed.", "Standort wurde nicht geändert."));
+            status.setText("Location was not changed.");
         }
     }
 
@@ -166,11 +164,10 @@ public final class WeatherPanel extends JPanel {
         int generation = ++locationSearchGeneration;
         model.removeAllElements();
         if (query.length() < 2) {
-            searchStatus.setText(t("Enter at least two characters.",
-                    "Mindestens zwei Zeichen eingeben."));
+            searchStatus.setText("Enter at least two characters.");
             return;
         }
-        searchStatus.setText(t("Searching locations...", "Orte werden gesucht..."));
+        searchStatus.setText("Searching locations...");
         Thread worker = new Thread(() -> {
             try {
                 List<Location> matches = searchLocations(query);
@@ -178,14 +175,13 @@ public final class WeatherPanel extends JPanel {
                     if (generation != locationSearchGeneration) return;
                     for (Location match : matches) model.addElement(match);
                     searchStatus.setText(matches.isEmpty()
-                            ? t("No matching location found.", "Kein passender Ort gefunden.")
-                            : t("Select the correct location below.", "Passenden Ort unten auswählen."));
+                            ? "No matching location found."
+                            : "Select the correct location below.");
                 });
             } catch (Exception exception) {
                 SwingUtilities.invokeLater(() -> {
                     if (generation == locationSearchGeneration)
-                        searchStatus.setText(t("Location search is unavailable.",
-                                "Ortssuche ist derzeit nicht verfügbar."));
+                        searchStatus.setText("Location search is unavailable.");
                 });
             }
         }, "weather-location-search");
@@ -231,7 +227,7 @@ public final class WeatherPanel extends JPanel {
     }
 
     private static String weatherTitle(String city) {
-        return "<html>" + t("Weather in ", "Wetter in ") + "<b>"
+        return "<html>Weather in <b>"
                 + city.replace("&", "&amp;").replace("<", "&lt;") + "</b></html>";
     }
 
@@ -239,7 +235,7 @@ public final class WeatherPanel extends JPanel {
         Location location = selectedLocation;
         if (location == null) return;
         status.setForeground(AssistantTheme.MUTED);
-        status.setText(t("Loading forecast...", "Vorhersage wird geladen..."));
+        status.setText("Loading forecast...");
         int generation = ++requestGeneration;
         Thread worker = new Thread(() -> load(location, generation), "weather-loader");
         worker.setDaemon(true);
@@ -264,8 +260,7 @@ public final class WeatherPanel extends JPanel {
                 SwingUtilities.invokeLater(() -> {
                     if (generation != requestGeneration) return;
                     status.setForeground(new Color(225, 105, 105));
-                    status.setText(t("Weather is currently unavailable. Check the connection.",
-                            "Wetter ist derzeit nicht verfügbar. Bitte Verbindung prüfen."));
+                    status.setText("Weather is currently unavailable. Check the connection.");
                     current.setText("—");
                     condition.setText(location.display);
                 });
@@ -280,8 +275,8 @@ public final class WeatherPanel extends JPanel {
             selectedDay = 0;
             status.setForeground(AssistantTheme.MUTED);
             status.setText(cached
-                    ? t("Offline: showing the last saved forecast.", "Offline: letzte gespeicherte Vorhersage.")
-                    : t("Weather data: Open-Meteo", "Wetterdaten: Open-Meteo"));
+                    ? "Offline: showing the last saved forecast."
+                    : "Weather data: Open-Meteo");
             updateView();
         });
     }
@@ -364,10 +359,6 @@ public final class WeatherPanel extends JPanel {
                 || country.equalsIgnoreCase("MH");
     }
 
-    private static String t(String english, String german) {
-        return Locale.getDefault().getLanguage().equalsIgnoreCase("de") ? german : english;
-    }
-
     private void updateView() {
         if (data == null) return;
         int localHour;
@@ -386,8 +377,8 @@ public final class WeatherPanel extends JPanel {
         long wind = Math.round(selectedDay == 0 ? data.wind : data.hourlyWind[statusIndex]);
         double displayedWind = fahrenheit ? wind * 0.621371 : wind;
         condition.setText(description(statusCode) + " · "
-                + t("Humidity ", "Luftfeuchte ") + humidity
-                + "% · " + t("Wind ", "Wind ") + Math.round(displayedWind)
+                + "Humidity " + humidity
+                + "% · Wind " + Math.round(displayedWind)
                 + (fahrenheit ? " mph" : " km/h"));
         days.removeAll();
         for (int i = 0; i < Math.min(7, data.dates.length); i++) {
@@ -446,12 +437,12 @@ public final class WeatherPanel extends JPanel {
     }
 
     private static String description(int code) {
-        if (code == 0) return t("Clear", "Klar");
-        if (code <= 2) return t("Partly cloudy", "Teilweise bewölkt");
-        if (code <= 48) return t("Cloudy", "Bewölkt");
-        if (code <= 67 || code >= 80 && code <= 82) return t("Rain", "Regen");
-        if (code <= 77 || code >= 85 && code <= 86) return t("Snow", "Schnee");
-        return t("Thunderstorm", "Gewitter");
+        if (code == 0) return "Clear";
+        if (code <= 2) return "Partly cloudy";
+        if (code <= 48) return "Cloudy";
+        if (code <= 67 || code >= 80 && code <= 82) return "Rain";
+        if (code <= 77 || code >= 85 && code <= 86) return "Snow";
+        return "Thunderstorm";
     }
 
     private static final class PencilIcon implements Icon {
