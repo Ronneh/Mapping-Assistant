@@ -11,6 +11,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseWheelEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -70,10 +72,37 @@ public final class MappingAssistant {
         frame.setContentPane(createContent());
         frame.pack();
         frame.setSize(1280, 820);
-        frame.setResizable(false);
+        frame.setResizable(true);
         frame.setLocationRelativeTo(null);
+        Dimension windowedSize = frame.getSize();
+        boolean[] restoringWindowedBounds = {false};
+        frame.addComponentListener(new ComponentAdapter() {
+            private void keepWindowedSize() {
+                int state = frame.getExtendedState();
+                if (restoringWindowedBounds[0]
+                        || (state & JFrame.ICONIFIED) != 0
+                        || (state & JFrame.MAXIMIZED_BOTH) != 0
+                        || (frame.getWidth() == windowedSize.width
+                        && frame.getHeight() == windowedSize.height)) return;
+                restoringWindowedBounds[0] = true;
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        if (frame.getExtendedState() == JFrame.NORMAL) {
+                            frame.setSize(windowedSize);
+                        }
+                    } finally {
+                        restoringWindowedBounds[0] = false;
+                    }
+                });
+            }
+
+            @Override public void componentResized(ComponentEvent event) {
+                keepWindowedSize();
+            }
+        });
         WindowsTitleBar.enableDark(frame);
         frame.setVisible(true);
+        WindowsTitleBar.preventManualResize(frame);
     }
 
     private JPanel createContent() {
