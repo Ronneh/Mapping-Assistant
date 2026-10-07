@@ -113,6 +113,7 @@ public final class MappingAssistant {
         navigation.setBorder(BorderFactory.createEmptyBorder(7, 10, 7, 10));
 
         registerApp(HOME, "\u2302", "Home", "\u00a0", createHomePanel());
+        registerApp("sketch", "\u270e", "Sketch", "Builder", new SketchPanel());
         registerApp("generator", "+", "Brush", "Generator", new BrushGeneratorPanel());
         registerApp("optimizer", "\u25a6", "Brush", "Optimizer", new BrushOptimizer().createContent());
         registerApp("quick-zone-optimizer", "\u2315", "Quick Zone", "Optimizer", new QuickZoneOptimizerPanel());
