@@ -90,8 +90,8 @@ icon. By default, the app image is written below `target\windows-release`.
 ### Asset Studio (initial UT99 export workflow)
 
 Asset Studio is available as a separate navigation tool. The current MVP
-contains a real, reloadable object-based scene, a low-poly animal starter
-scene, primitive creation, direct viewport transforms, custom texture import,
+contains a real, reloadable object-based scene, a low-poly starter figure,
+primitive creation, direct viewport transforms, custom texture import,
 and a classic UT99 mesh export pipeline. It intentionally does not claim to be
 a general mesh editor yet.
 
@@ -99,9 +99,11 @@ To test the workflow:
 
 1. Open **Asset Studio** and choose the UT99 installation root, the folder
    containing `System` and `UnrealTournament.ini`, plus its `System\UCC.exe`.
-2. In the **Objects** tab, start with the low-poly animal or choose **New
+2. In the **Objects** tab, start with the starter figure or choose **New
    cube**. Select an object in the list or click it in the preview. Choose
-   **Move**, **Rotate**, or **Scale**, then drag the object in the preview.
+   **Move**, **Rotate**, **Scale**, or **Vertex**, then drag the object or a
+   corner in the preview. The upper T/F/S orthographic view uses an origin
+   centered grid with eight-unit snapping; the lower view is perspective.
    **Add box**, **Add pyramid**, **Duplicate**, and **Delete** build a scene
    from multiple editable parts. Numeric transforms are available below the
    object list.
@@ -124,7 +126,7 @@ To test the workflow:
    `EditPackages=AssetStudioDemo` to the `[Editor.EditorEngine]` section.
 7. A successful run requires UCC to report zero errors and produces
    `System\AssetStudioDemo.u`. Load that package in UnrealEd's package/mesh
-   browser and inspect `AssetStudioAnimal`; the generated actor class is
+   browser and inspect `AssetStudioFigure`; the generated actor class is
    `AssetStudioDemoActor`.
 
 Projects can be saved and reopened as versioned `.maasset` files. The export

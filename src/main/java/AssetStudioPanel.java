@@ -9,6 +9,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.prefs.Preferences;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -28,7 +31,9 @@ import javax.imageio.ImageIO;
 
 /** Editable mesh and texture workflow for UT99 package generation. */
 public final class AssetStudioPanel extends JPanel {
-    private AssetStudioProject project = AssetStudioProject.createLowPolyAnimal();
+    private static final Preferences ASSET_STUDIO_PREFS =
+            Preferences.userNodeForPackage(AssetStudioPanel.class).node("asset-studio");
+    private AssetStudioProject project = AssetStudioProject.createLowPolyFigure();
     private Path currentFile;
     private final JTextField packageName = new JTextField();
     private final JTextField actorClassName = new JTextField();
@@ -50,6 +55,10 @@ public final class AssetStudioPanel extends JPanel {
     private final JLabel texturePreview = new JLabel("No custom texture imported");
     private final AssetStudioObjectEditor objectEditor;
     private final AssetStudioTextureEditor textureEditor;
+    private final Deque<AssetStudioProject> undoHistory = new ArrayDeque<>();
+    private final Deque<AssetStudioProject> redoHistory = new ArrayDeque<>();
+    private AssetStudioProject historySnapshot;
+    private boolean restoringHistory;
     private VertexTableModel verticesModel;
     private TriangleTableModel trianglesModel;
 
@@ -66,6 +75,7 @@ public final class AssetStudioPanel extends JPanel {
         AssistantTheme.styleSplitPane(main);
         add(main, BorderLayout.CENTER);
         loadFields();
+        historySnapshot = project.copy();
         log.setText("Create sources writes a real UT99 Models/Classes package below the selected root.\n"
                 + "Compile with UCC verifies the generated .u file and keeps compiler output.\n");
     }
@@ -81,11 +91,20 @@ public final class AssetStudioPanel extends JPanel {
         header.add(description, BorderLayout.CENTER);
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         actions.setOpaque(false);
-        actions.add(button("New animal", event -> newDemo()));
+        actions.add(button("New figure", event -> newDemo()));
         actions.add(button("Open", event -> openProject()));
         actions.add(button("Save", event -> saveProject(false)));
         actions.add(button("Save as...", event -> saveProject(true)));
         header.add(actions, BorderLayout.EAST);
+        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(javax.swing.KeyStroke.getKeyStroke("ctrl Z"), "assetUndo");
+        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(javax.swing.KeyStroke.getKeyStroke("ctrl shift Z"), "assetRedo");
+        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(javax.swing.KeyStroke.getKeyStroke("ctrl Y"), "assetRedo");
+        getActionMap().put("assetUndo", new javax.swing.AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent event) { undo(); }
+        });
+        getActionMap().put("assetRedo", new javax.swing.AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent event) { redo(); }
+        });
         return header;
     }
 
@@ -184,7 +203,9 @@ public final class AssetStudioPanel extends JPanel {
         texturePreview.setHorizontalAlignment(JLabel.CENTER);
         texturePreview.setPreferredSize(new Dimension(220, 130));
         texture.add(texturePreview, BorderLayout.CENTER);
-        texture.add(button("Import UED-compatible texture", event -> importTexture()), BorderLayout.SOUTH);
+        JLabel textureHint = new JLabel("Select or import textures in Texture & UV. The active texture is reused for export.");
+        textureHint.setForeground(AssistantTheme.MUTED);
+        texture.add(textureHint, BorderLayout.SOUTH);
         export.add(texture, BorderLayout.CENTER);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
@@ -229,22 +250,59 @@ public final class AssetStudioPanel extends JPanel {
     private void newDemo() {
         String previousRoot = utRoot.getText();
         String previousUcc = uccPath.getText();
-        AssetStudioProject next = AssetStudioProject.createLowPolyAnimal();
+        AssetStudioProject next = AssetStudioProject.createLowPolyFigure();
         next.unrealTournamentRoot = previousRoot;
         next.uccPath = previousUcc;
         replaceProject(next);
-        log("New low-poly animal scene created.");
+        log("New low-poly starter figure scene created.");
     }
 
     private void replaceProject(AssetStudioProject next) {
         project = next;
         currentFile = null;
         loadFields();
+        resetHistory();
     }
 
     private void sceneChanged() {
+        if (!restoringHistory && historySnapshot != null) {
+            AssetStudioProject current = project.copy();
+            if (!current.snapshotSignature().equals(historySnapshot.snapshotSignature())) {
+                undoHistory.push(historySnapshot);
+                historySnapshot = current;
+                redoHistory.clear();
+            }
+        }
         updateMeshStatus();
         viewport.repaint();
+    }
+
+    private void resetHistory() {
+        undoHistory.clear();
+        redoHistory.clear();
+        historySnapshot = project.copy();
+    }
+
+    private void undo() {
+        if (undoHistory.isEmpty()) return;
+        redoHistory.push(project.copy());
+        project = undoHistory.pop();
+        restoringHistory = true;
+        loadFields();
+        restoringHistory = false;
+        historySnapshot = project.copy();
+        log("Undo");
+    }
+
+    private void redo() {
+        if (redoHistory.isEmpty()) return;
+        undoHistory.push(project.copy());
+        project = redoHistory.pop();
+        restoringHistory = true;
+        loadFields();
+        restoringHistory = false;
+        historySnapshot = project.copy();
+        log("Redo");
     }
 
     private void clearMesh() {
@@ -253,9 +311,14 @@ public final class AssetStudioPanel extends JPanel {
         refreshMeshTables();
         status.setText("Empty mesh");
         log("Created an empty mesh. Add vertices and triangles below.");
+        sceneChanged();
     }
 
     private void loadFields() {
+        if (project.unrealTournamentRoot == null || project.unrealTournamentRoot.isBlank())
+            project.unrealTournamentRoot = ASSET_STUDIO_PREFS.get("ut99-root", "");
+        if (project.uccPath == null || project.uccPath.isBlank())
+            project.uccPath = ASSET_STUDIO_PREFS.get("ucc-path", "");
         viewport.setProject(project);
         objectEditor.setProject(project);
         textureEditor.setProject(project);
@@ -297,6 +360,7 @@ public final class AssetStudioPanel extends JPanel {
             refreshMeshTables();
             verticesTable.setRowSelectionInterval(project.vertices.size() - 1, project.vertices.size() - 1);
             updateMeshStatus();
+            sceneChanged();
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
         }
@@ -316,6 +380,7 @@ public final class AssetStudioPanel extends JPanel {
             verticesModel.fireTableRowsUpdated(row, row);
             viewport.repaint();
             updateMeshStatus();
+            sceneChanged();
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
         }
@@ -335,6 +400,7 @@ public final class AssetStudioPanel extends JPanel {
         }
         refreshMeshTables();
         updateMeshStatus();
+        sceneChanged();
     }
 
     private static boolean containsVertex(AssetStudioProject.Triangle triangle, int vertex) {
@@ -354,6 +420,7 @@ public final class AssetStudioPanel extends JPanel {
             refreshMeshTables();
             trianglesTable.setRowSelectionInterval(project.triangles.size() - 1, project.triangles.size() - 1);
             updateMeshStatus();
+            sceneChanged();
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
         }
@@ -368,6 +435,7 @@ public final class AssetStudioPanel extends JPanel {
         project.triangles.remove(row);
         refreshMeshTables();
         updateMeshStatus();
+        sceneChanged();
     }
 
     private static AssetStudioProject.Triangle newTriangle(int a, int b, int c) {
@@ -449,6 +517,8 @@ public final class AssetStudioPanel extends JPanel {
         project.textureName = textureName.getText().trim();
         project.unrealTournamentRoot = utRoot.getText().trim();
         project.uccPath = uccPath.getText().trim();
+        ASSET_STUDIO_PREFS.put("ut99-root", project.unrealTournamentRoot);
+        ASSET_STUDIO_PREFS.put("ucc-path", project.uccPath);
     }
 
     private void saveProject(boolean chooseFile) {
@@ -482,6 +552,7 @@ public final class AssetStudioPanel extends JPanel {
             project = AssetStudioProject.load(chooser.getSelectedFile().toPath());
             currentFile = chooser.getSelectedFile().toPath();
             loadFields();
+            resetHistory();
             log("Opened project: " + currentFile);
         } catch (IOException exception) {
             showError("Could not open project: " + exception.getMessage());
@@ -572,8 +643,15 @@ public final class AssetStudioPanel extends JPanel {
         JFileChooser chooser = new DarkFileChooser(new File(System.getProperty("user.home")));
         chooser.setDialogTitle(title);
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-            target.setText(chooser.getSelectedFile().getAbsolutePath());
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            String root = chooser.getSelectedFile().getAbsolutePath();
+            target.setText(root);
+            if (target == utRoot && (uccPath.getText().isBlank()
+                    || uccPath.getText().equals(ASSET_STUDIO_PREFS.get("ucc-path", ""))))
+                uccPath.setText(Path.of(root, "System", "ucc.exe").toString());
+            ASSET_STUDIO_PREFS.put("ut99-root", root);
+            ASSET_STUDIO_PREFS.put("ucc-path", uccPath.getText().trim());
+        }
     }
 
     private void chooseFile(JTextField target, String title) {

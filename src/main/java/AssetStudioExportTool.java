@@ -6,15 +6,15 @@ public final class AssetStudioExportTool {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2 || args.length > 3) {
-            System.err.println("Usage: AssetStudioExportTool <UT99-root> <ucc.exe> [animal]");
+            System.err.println("Usage: AssetStudioExportTool <UT99-root> <ucc.exe> [figure]");
             System.exit(2);
         }
-        boolean animal = args.length == 3 && args[2].equalsIgnoreCase("animal");
-        AssetStudioProject project = animal
-                ? AssetStudioProject.createLowPolyAnimal() : AssetStudioProject.createDemoCube();
-        if (animal) {
-            project.packageName = "AssetStudioAnimalDemo";
-            project.actorClassName = "AssetStudioAnimalDemoActor";
+        boolean figure = args.length == 3 && args[2].equalsIgnoreCase("figure");
+        AssetStudioProject project = figure
+                ? AssetStudioProject.createLowPolyFigure() : AssetStudioProject.createDemoCube();
+        if (figure) {
+            project.packageName = "AssetStudioFigureDemo";
+            project.actorClassName = "AssetStudioFigureDemoActor";
             Path root = Path.of(args[0]);
             Ut99AssetExporter.addPackageToEditPackages(root, project.packageName);
         }

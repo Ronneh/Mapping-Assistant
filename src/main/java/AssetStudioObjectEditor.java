@@ -65,7 +65,7 @@ public final class AssetStudioObjectEditor extends JPanel {
     private JPanel createActions() {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         actions.setOpaque(false);
-        actions.add(button("New animal", event -> replaceProject.accept(AssetStudioProject.createLowPolyAnimal())));
+        actions.add(button("New figure", event -> replaceProject.accept(AssetStudioProject.createLowPolyFigure())));
         actions.add(button("New cube", event -> replaceProject.accept(AssetStudioProject.createDemoCube())));
         actions.add(button("Empty scene", event -> {
             AssetStudioProject empty = new AssetStudioProject();
@@ -98,13 +98,15 @@ public final class AssetStudioObjectEditor extends JPanel {
         JRadioButton move = new JRadioButton("Move", true);
         JRadioButton rotate = new JRadioButton("Rotate");
         JRadioButton scaleMode = new JRadioButton("Scale");
-        move.setOpaque(false); rotate.setOpaque(false); scaleMode.setOpaque(false);
+        JRadioButton vertex = new JRadioButton("Vertex");
+        move.setOpaque(false); rotate.setOpaque(false); scaleMode.setOpaque(false); vertex.setOpaque(false);
         ButtonGroup group = new ButtonGroup();
-        group.add(move); group.add(rotate); group.add(scaleMode);
+        group.add(move); group.add(rotate); group.add(scaleMode); group.add(vertex);
         move.addActionListener(event -> viewport.setInteractionMode(AssetStudioViewport.InteractionMode.MOVE));
         rotate.addActionListener(event -> viewport.setInteractionMode(AssetStudioViewport.InteractionMode.ROTATE));
         scaleMode.addActionListener(event -> viewport.setInteractionMode(AssetStudioViewport.InteractionMode.SCALE));
-        controls.add(move); controls.add(rotate); controls.add(scaleMode);
+        vertex.addActionListener(event -> viewport.setInteractionMode(AssetStudioViewport.InteractionMode.VERTEX));
+        controls.add(move); controls.add(rotate); controls.add(scaleMode); controls.add(vertex);
         controls.add(button("Apply", event -> applyFields()));
         panel.add(controls, BorderLayout.SOUTH);
         return panel;

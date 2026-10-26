@@ -23,7 +23,7 @@ public final class AssetStudioProject {
     public int formatVersion = CURRENT_FORMAT_VERSION;
     public String packageName = "AssetStudioDemo";
     public String actorClassName = "AssetStudioDemoActor";
-    public String meshName = "AssetStudioAnimal";
+    public String meshName = "AssetStudioFigure";
     public String textureName = "AssetStudioTexture";
     public String uccPath = "";
     public String unrealTournamentRoot = "";
@@ -47,7 +47,7 @@ public final class AssetStudioProject {
         return project;
     }
 
-    public static AssetStudioProject createLowPolyAnimal() {
+    public static AssetStudioProject createLowPolyFigure() {
         AssetStudioProject project = new AssetStudioProject();
         project.objects.add(createBoxObject("Body", 42, 20, 24, 0, 15, 0));
         project.objects.add(createBoxObject("Head", 22, 19, 20, 27, 25, 0));
@@ -61,9 +61,15 @@ public final class AssetStudioProject {
         MeshObject tail = createBoxObject("Tail", 18, 7, 7, -28, 24, 0);
         tail.rotationZ = -24;
         project.objects.add(tail);
-        project.meshName = "AssetStudioAnimal";
+        project.meshName = "AssetStudioFigure";
         project.syncLegacyFromObjects();
         return project;
+    }
+
+    /** Kept for compatibility with earlier development builds. */
+    @Deprecated
+    public static AssetStudioProject createLowPolyAnimal() {
+        return createLowPolyFigure();
     }
 
     public static MeshObject createBoxObject(String name, double width, double depth,
@@ -333,6 +339,19 @@ public final class AssetStudioProject {
         if (project.formatVersion < 3) project.ensureSceneObjects();
         project.formatVersion = CURRENT_FORMAT_VERSION;
         return project;
+    }
+
+    /** Creates an in-memory snapshot used by the editor undo/redo history. */
+    public AssetStudioProject copy() {
+        return JSON.convertValue(this, AssetStudioProject.class);
+    }
+
+    public String snapshotSignature() {
+        try {
+            return JSON.writeValueAsString(this);
+        } catch (IOException exception) {
+            return Integer.toHexString(System.identityHashCode(this));
+        }
     }
 
     public List<String> validate() {
