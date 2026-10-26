@@ -114,6 +114,7 @@ public final class MappingAssistant {
 
         registerApp(HOME, "\u2302", "Home", "\u00a0", createHomePanel());
         registerApp("sketch", "\u270e", "Sketch", "Builder", new SketchPanel());
+        registerApp("asset-studio", "\u25c6", "Asset", "Studio", new AssetStudioPanel());
         registerApp("generator", "+", "Brush", "Generator", new BrushGeneratorPanel());
         registerApp("optimizer", "\u25a6", "Brush", "Optimizer", new BrushOptimizer().createContent());
         registerApp("quick-zone-optimizer", "\u2315", "Quick Zone", "Optimizer", new QuickZoneOptimizerPanel());

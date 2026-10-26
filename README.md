@@ -87,6 +87,56 @@ icon. By default, the app image is written below `target\windows-release`.
 - **Editor Guide** contains a big collection of Unreal Editor 2
   reference pages and community tutorials, with contents and search.
 
+### Asset Studio (initial UT99 export workflow)
+
+Asset Studio is available as a separate navigation tool. The current MVP
+contains a real, reloadable object-based scene, a low-poly animal starter
+scene, primitive creation, direct viewport transforms, custom texture import,
+and a classic UT99 mesh export pipeline. It intentionally does not claim to be
+a general mesh editor yet.
+
+To test the workflow:
+
+1. Open **Asset Studio** and choose the UT99 installation root, the folder
+   containing `System` and `UnrealTournament.ini`, plus its `System\UCC.exe`.
+2. In the **Objects** tab, start with the low-poly animal or choose **New
+   cube**. Select an object in the list or click it in the preview. Choose
+   **Move**, **Rotate**, or **Scale**, then drag the object in the preview.
+   **Add box**, **Add pyramid**, **Duplicate**, and **Delete** build a scene
+   from multiple editable parts. Numeric transforms are available below the
+   object list.
+3. Select a triangle in the 3D preview and open **Texture & UV**. Import a
+   texture and use **Apply to selected face**. Multiple imported textures are
+   kept as texture slots, so different faces can use different images. With
+   quad mode enabled, the matching triangle is edited together with the
+   selected one. The editor provides U/V pan steps, custom pan, rotation,
+   flips, independent horizontal and vertical scaling, and the supported
+   UnrealEd-style alignment commands.
+   Imported textures must use power-of-two dimensions of at least 32 pixels,
+   such as 32x32, 64x128, or 256x256; invalid dimensions are rejected with a
+   clear message.
+4. The image is embedded in the `.maasset` project. Its original power-of-two
+   dimensions are preserved when the 8-bit PCX export is written.
+5. Use **Create sources** to write `AssetStudioDemo\Classes`,
+   `AssetStudioDemo\Models`, a PCX test texture, and the generated build notes
+   below the selected UT99 root.
+6. Use **Compile with UCC**. The first run asks for confirmation before adding
+   `EditPackages=AssetStudioDemo` to the `[Editor.EditorEngine]` section.
+7. A successful run requires UCC to report zero errors and produces
+   `System\AssetStudioDemo.u`. Load that package in UnrealEd's package/mesh
+   browser and inspect `AssetStudioAnimal`; the generated actor class is
+   `AssetStudioDemoActor`.
+
+Projects can be saved and reopened as versioned `.maasset` files. The export
+uses the classic Unreal 1 `_d.3d`/`_a.3d` files, an 8-bit PCX texture, and
+UnrealScript `#exec` directives. Before export, the object scene is flattened
+into one classic mesh while preserving local object geometry and transforms in
+the `.maasset` source project. The current milestone exports one static mesh
+frame; UVs are stored per triangle corner and primitive faces receive a basic
+0..255 UV mapping. The current UV tools deliberately exclude UnrealEd's
+diagonal, WallXY/X/Y, and skew controls. Skeletons, keyframe animation,
+extrusion, and animated UT99 conversion remain future milestones.
+
 ### Planning and daily information
 
 - **To-Do List** organizes notes and tasks in folders, with rich-text editing
